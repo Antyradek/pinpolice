@@ -1,0 +1,23 @@
+       _                   _ _          
+ _ __ (_)_ __  _ __   ___ | (_) ___ ___ 
+| '_ \| | '_ \| '_ \ / _ \| | |/ __/ _ \
+| |_) | | | | | |_) | (_) | | | (_|  __/
+| .__/|_|_| |_| .__/ \___/|_|_|\___\___|
+|_|           |_|                       
+
+To projekt Android Studio (co za śmietnik w repozytorium).
+Jak ogarniemy, to sprzątniemy.
+
+Kompatybilność:
+Powinien działać na KitKacie.
+Testowany na Oreo.
+
+Co działa:
+Jak się uruchomi aplikację, to uruchamia serwis w tle i wciska powiadomienie na pasek.
+
+Co dalej zrobić:
+• Uruchomienie kamery i sprawdzanie, jak działa.
+• Pstryczek aktywacji na głównym ekranie.
+• Podgląd kamery na osobnym ekranie (jeśli w miarę łatwe).
+• ...potem jakieś rzeczy z lokalizacją.
+• ...potem coś z mapą.
