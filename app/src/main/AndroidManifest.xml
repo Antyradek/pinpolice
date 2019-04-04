@@ -18,6 +18,8 @@
             </intent-filter>
         </activity>
         <service android:name=".CameraService" android:enabled="true" />
-    </application>
 
+    </application>
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-permission android:name="android.permission.CAMERA" />
 </manifest>

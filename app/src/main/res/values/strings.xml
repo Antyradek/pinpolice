@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Pinpolice</string>
     <string name="camera_notification">Pinpolicja ogląda psy</string>
+    <string name="camera_request_description">Bez aparatu będzie ciężko</string>
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>

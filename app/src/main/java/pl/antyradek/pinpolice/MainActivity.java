@@ -1,8 +1,11 @@
 package pl.antyradek.pinpolice;
 
+import android.Manifest;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
@@ -46,13 +49,47 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
-        //startuje kamerę
-        startCameraService();
+        //poproś o pozwolenie na kamerę
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        {
+            if(checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
+            {
+                //wywoła callback
+                requestPermissions(new String[]{Manifest.permission.CAMERA}, 12345);
+            }
+            else
+            {
+                //już dane pozwolenie
+                startCameraService();
+            }
+        }
+        else
+            {
+            //startuje kamerę
+            startCameraService();
+        }
     }
 
     void startCameraService(){
         //wystartuj serwis kamery
         this.startService(new Intent(this, CameraService.class));
+    }
+
+    /** Wywołane na zezwolenie na kamerę */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if(permissions.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+        {
+            //zezwolono na aparat
+            startCameraService();
+        }
+        else
+        {
+            //powiedz, że to niefajne
+            Toast.makeText(this, R.string.camera_request_description, Toast.LENGTH_LONG);
+        }
     }
 
     @Override

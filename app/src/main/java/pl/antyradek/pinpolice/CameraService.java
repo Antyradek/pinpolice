@@ -6,16 +6,40 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.ImageFormat;
+import android.graphics.SurfaceTexture;
+import android.hardware.Camera;
+import android.opengl.GLES20;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.Console;
+import java.io.IOException;
+
 /** Serwis działający w tle do odczytywania obrazów z kamery i interpretacji obrazu */
-public class CameraService extends Service {
+public class CameraService extends Service implements Camera.PreviewCallback {
 
+    /** Używany aparat */
+    private Camera mainCamera;
 
+    /** Rozmiar podglądu */
+    final int PREVIEW_WIDH = 256;
+    final int PREVIEW_HEIGHT = 256;
+
+    /** Identyfikator usugi */
+    final int FOREGROUND_SERVICE_ID = 12345;
+
+    /** Budowacz powiadomienia do aktualizacji tegoż */
+    Notification.Builder notificationBuilder;
+
+    /** Pamięć kamery */
+    SurfaceTexture surfaceTexture;
 
     /** Stwarza cały serwis */
     @Override
@@ -23,14 +47,11 @@ public class CameraService extends Service {
         super.onCreate();
 
         //stwórz powiadomienie
-        final int foregroundServiceId = 1234;
-
-        Notification.Builder builder;
         //dla nowszych wersji trzeba stworzyć kanał powiadomień
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
         {
             final String notificationChannelId = "PINPOLICE_NOTIFICATION_CHANNEL_ID";
-            builder = new Notification.Builder(this, notificationChannelId);
+            this.notificationBuilder = new Notification.Builder(this, notificationChannelId);
             //stwórz kanał powiadomień
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             NotificationChannel notificationChannel = new NotificationChannel(notificationChannelId, getString(R.string.app_name), NotificationManager.IMPORTANCE_LOW);
@@ -38,18 +59,31 @@ public class CameraService extends Service {
         }
         else
         {
-            builder = new Notification.Builder(this);
+            this.notificationBuilder = new Notification.Builder(this);
         }
 
         //ustaw parametry powiadomienia
-        builder.setContentTitle(getString(R.string.camera_notification))
+        this.notificationBuilder.setContentTitle(getString(R.string.camera_notification))
+                .setContentText("Jasność nieokreślona")
                 .setSmallIcon(R.drawable.ic_camera_black_24dp);
 
         //przestaw serwis na pierwszy plan (potrzebne żeby używać aparatu)
-        startForeground(foregroundServiceId, builder.build());
+        startForeground(FOREGROUND_SERVICE_ID, this.notificationBuilder.build());
 
-        //TODO uruchom aparat
-
+        //uruchom aparat
+        this.mainCamera = Camera.open();
+        Camera.Parameters cameraParameters = this.mainCamera.getParameters();
+        cameraParameters.setPreviewSize(PREVIEW_WIDH, PREVIEW_HEIGHT);
+        this.mainCamera.setParameters(cameraParameters);
+        this.surfaceTexture = new SurfaceTexture(111);
+        try {
+            this.mainCamera.setPreviewTexture(surfaceTexture);
+        }
+        catch(IOException error){
+            Toast.makeText(this, "Tekstura nie może być stworzona", Toast.LENGTH_LONG);
+            return;
+        }
+        this.mainCamera.setPreviewCallback(this);
     }
 
     /** Zawołane, gdy inna czynność spróbje zbindować serwis */
@@ -60,12 +94,46 @@ public class CameraService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Toast.makeText(this, "Serwis kamery uruchomiony", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Kamera uruchomiona", Toast.LENGTH_SHORT).show();
 
-
-
-        //TODO uruchom aparat
+        //uruchom aparat
+        this.mainCamera.startPreview();
 
         return Service.START_STICKY;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        this.mainCamera.stopPreview();
+        this.mainCamera.release();
+    }
+
+    /** Wołane na każdą ramkę kamery */
+    @Override
+    public void onPreviewFrame(byte[] data, Camera camera) {
+        //NOTE data to jakiś YUV obiekt, nie da się bezpośrednio RGB wyciągnąć
+
+        //TODO operacje na sieci neuronowej
+
+        //DEBUG oblicz jasność obrazu
+        int sum = 0;
+        for(byte pixel : data)
+        {
+            sum += pixel;
+        }
+        double mean = 1.0 * sum / data.length;
+
+        //przerób na bitmapę
+        //Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+        //Bitmap bitmap = Bitmap.createBitmap(PREVIEW_WIDH, PREVIEW_HEIGHT, Bitmap.Config.ARGB_8888);
+        //bitmap.eraseColor(Color.MAGENTA);
+
+        //GLES20.glReadPixels(); ?
+
+        //zaktualizuj powiadomienie
+        this.notificationBuilder.setContentText("\"Jasność\": " + mean);
+        //this.notificationBuilder.setLargeIcon(bitmap);
+        startForeground(FOREGROUND_SERVICE_ID, this.notificationBuilder.build());
     }
 }
