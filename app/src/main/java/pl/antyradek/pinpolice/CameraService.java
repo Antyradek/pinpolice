@@ -72,15 +72,36 @@ public class CameraService extends Service implements Camera.PreviewCallback {
 
         //uruchom aparat
         this.mainCamera = Camera.open();
-        Camera.Parameters cameraParameters = this.mainCamera.getParameters();
-        cameraParameters.setPreviewSize(PREVIEW_WIDH, PREVIEW_HEIGHT);
-        this.mainCamera.setParameters(cameraParameters);
+        try
+        {
+            Camera.Parameters cameraParameters = this.mainCamera.getParameters();
+            //NOTE poniższa rzuci wyjątkiem na Pie lub na emulatorze
+
+            //TODO wielkości nie są obsługiwane zawsze i wszędzie, trzeba by wybrać jak jak najbardziej zbliżoną wielkość
+            //TODO wysłać wielkości do menu?
+            for (Camera.Size size: cameraParameters.getSupportedPreviewSizes())
+            {
+                if(size.height > PREVIEW_HEIGHT && size.width > PREVIEW_WIDH)
+                {
+                    cameraParameters.setPreviewSize(size.width, size.height);
+                    break;
+                }
+            }
+            this.mainCamera.setParameters(cameraParameters);
+        }
+        catch(RuntimeException error)
+        {
+            Toast.makeText(this, "Nie można ustawić parametrów aparatu", Toast.LENGTH_LONG).show();
+            //kontynuujemy dalej
+        }
+
         this.surfaceTexture = new SurfaceTexture(111);
-        try {
+        try
+        {
             this.mainCamera.setPreviewTexture(surfaceTexture);
         }
         catch(IOException error){
-            Toast.makeText(this, "Tekstura nie może być stworzona", Toast.LENGTH_LONG);
+            Toast.makeText(this, "Tekstura nie może być stworzona", Toast.LENGTH_LONG).show();
             return;
         }
         this.mainCamera.setPreviewCallback(this);
@@ -95,6 +116,7 @@ public class CameraService extends Service implements Camera.PreviewCallback {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Toast.makeText(this, "Kamera uruchomiona", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Wielkość aparatu: " + mainCamera.getParameters().getPreviewSize().width + "×" + mainCamera.getParameters().getPreviewSize().height, Toast.LENGTH_LONG).show();
 
         //uruchom aparat
         this.mainCamera.startPreview();

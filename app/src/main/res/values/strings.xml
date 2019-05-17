@@ -3,6 +3,13 @@
     <string name="camera_notification">Pinpolicja ogląda psy</string>
     <string name="camera_request_description">Bez aparatu będzie ciężko</string>
     <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
+    <string name="title_dashboard">Kontrola</string>
     <string name="title_notifications">Notifications</string>
+    <string name="title_camera_view">Podgląd</string>
+    <string name="title_map">Mapa</string>
+
+    <string name="dashboard_instruction_title">Instrukcja</string>
+    <string name="dashboard_instruction">Aplikacja służy do zaliczenia przedmiotu WPAM</string>
+
+    <string name="dashboard_settings_title">Ustawienia aplikacji</string>
 </resources>

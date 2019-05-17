@@ -9,31 +9,40 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView mTextMessage;
+    private ScrollView mainView;
+    private LinearLayout mainLinearLayout;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+            //usuń wszystko, co wcześniej
+            mainLinearLayout.removeAllViews();
+
             switch (item.getItemId()) {
-                case R.id.navigation_home:
-                    mTextMessage.setText(R.string.title_home);
-                    return true;
                 case R.id.navigation_dashboard:
-                    mTextMessage.setText(R.string.title_dashboard);
+                    mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.dashboard, null));
                     return true;
-                case R.id.navigation_notifications:
-                    mTextMessage.setText(R.string.title_notifications);
+                case R.id.navigation_camera_view:
+                    mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.camera_view, null));
                     return true;
+                case R.id.navigation_map:
+                    mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.map, null));
+                    return true;
+
             }
             return false;
         }
@@ -44,10 +53,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // wsadza napis?
-        mTextMessage = (TextView) findViewById(R.id.message);
+        //ustaw słuchanie przełączeń elementów menu
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+
+        //znajdź elementy GUI
+        mainView = (ScrollView) findViewById(R.id.main_view);
+        mainLinearLayout = (LinearLayout) findViewById(R.id.main_linear_layout);
+
+        //ustaw temat (jakiś bug i nie robi tego automatycznie)
+        getApplicationContext().setTheme(R.style.AppTheme);
+        //ustaw pierwszy widok na start
+        mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.dashboard, null));
 
         //poproś o pozwolenie na kamerę
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
@@ -72,7 +89,8 @@ public class MainActivity extends AppCompatActivity {
 
     void startCameraService(){
         //wystartuj serwis kamery
-        this.startService(new Intent(this, CameraService.class));
+        Intent intent = new Intent(this, CameraService.class);
+        this.startService(intent);
     }
 
     /** Wywołane na zezwolenie na kamerę */
