@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
@@ -18,6 +19,11 @@ import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
+import android.graphics.Matrix;
+import pl.antyradek.pinpolice.env.ImageUtils;
+import java.util.List;
+import android.graphics.Canvas;
+import pl.antyradek.pinpolice.env.Logger;
 
 import java.io.Console;
 import java.io.IOException;
@@ -43,11 +49,28 @@ public class CameraService extends Service implements Camera.PreviewCallback {
 
     private Classifier classifier;
 
+    private Bitmap rgbFrameBitmap = null;
+    private Bitmap croppedBitmap = null;
+    private Bitmap cropCopyBitmap = null;
+    private Matrix frameToCropTransform;
+    private Matrix cropToFrameTransform;
+    protected int previewWidth = 0;
+    protected int previewHeight = 0;
+    private Integer sensorOrientation;
+
+    private int[] rgbBytes = null;
+
     private static final int INPUT_SIZE = 224;
     private static final int IMAGE_MEAN = 117;
     private static final float IMAGE_STD = 1;
     private static final String INPUT_NAME = "resnet50_input";
     private static final String OUTPUT_NAME = "dense/Softmax";
+
+    private static final boolean MAINTAIN_ASPECT = true;
+
+    private Runnable imageConverter;
+
+    private static final Logger LOGGER = new Logger();
 
     /** Stwarza cały serwis */
     @Override
@@ -124,6 +147,26 @@ public class CameraService extends Service implements Camera.PreviewCallback {
                         IMAGE_STD,
                         INPUT_NAME,
                         OUTPUT_NAME);
+
+        previewWidth = mainCamera.getParameters().getPreviewSize().width;
+        previewHeight = mainCamera.getParameters().getPreviewSize().height;
+
+        sensorOrientation = 0; //TODO
+
+        rgbFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Config.ARGB_8888);
+        croppedBitmap = Bitmap.createBitmap(INPUT_SIZE, INPUT_SIZE, Config.ARGB_8888);
+
+        frameToCropTransform = ImageUtils.getTransformationMatrix(
+                previewWidth, previewHeight,
+                INPUT_SIZE, INPUT_SIZE,
+                sensorOrientation, MAINTAIN_ASPECT);
+
+        cropToFrameTransform = new Matrix();
+        frameToCropTransform.invert(cropToFrameTransform);
+
+        if (rgbBytes == null) {
+            rgbBytes = new int[previewWidth * previewHeight];
+        }
     }
 
     /** Zawołane, gdy inna czynność spróbje zbindować serwis */
@@ -152,7 +195,7 @@ public class CameraService extends Service implements Camera.PreviewCallback {
 
     /** Wołane na każdą ramkę kamery */
     @Override
-    public void onPreviewFrame(byte[] data, Camera camera) {
+    public void onPreviewFrame(final byte[] data, Camera camera) {
         //NOTE data to jakiś YUV obiekt, nie da się bezpośrednio RGB wyciągnąć
 
         //TODO operacje na sieci neuronowej
@@ -165,6 +208,23 @@ public class CameraService extends Service implements Camera.PreviewCallback {
         }
         double mean = 1.0 * sum / data.length;
 
+        imageConverter =
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        ImageUtils.convertYUV420SPToARGB8888(data, previewWidth, previewHeight, rgbBytes);
+                    }
+                };
+
+        rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
+        final Canvas canvas = new Canvas(croppedBitmap);
+        canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
+
+        final List<Classifier.Recognition> results = classifier.recognizeImage(croppedBitmap);
+
+        LOGGER.i("Detect: %s", results);
+        Toast.makeText(this, "Detect:"+results, Toast.LENGTH_LONG).show();
+
         //przerób na bitmapę
         //Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
         //Bitmap bitmap = Bitmap.createBitmap(PREVIEW_WIDH, PREVIEW_HEIGHT, Bitmap.Config.ARGB_8888);
@@ -176,5 +236,10 @@ public class CameraService extends Service implements Camera.PreviewCallback {
         this.notificationBuilder.setContentText("\"Jasność\": " + mean);
         //this.notificationBuilder.setLargeIcon(bitmap);
         startForeground(FOREGROUND_SERVICE_ID, this.notificationBuilder.build());
+    }
+
+    protected int[] getRgbBytes() {
+        imageConverter.run();
+        return rgbBytes;
     }
 }
