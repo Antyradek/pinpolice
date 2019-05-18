@@ -41,6 +41,14 @@ public class CameraService extends Service implements Camera.PreviewCallback {
     /** Pamięć kamery */
     SurfaceTexture surfaceTexture;
 
+    private Classifier classifier;
+
+    private static final int INPUT_SIZE = 224;
+    private static final int IMAGE_MEAN = 117;
+    private static final float IMAGE_STD = 1;
+    private static final String INPUT_NAME = "resnet50_input";
+    private static final String OUTPUT_NAME = "dense/Softmax";
+
     /** Stwarza cały serwis */
     @Override
     public void onCreate() {
@@ -105,6 +113,17 @@ public class CameraService extends Service implements Camera.PreviewCallback {
             return;
         }
         this.mainCamera.setPreviewCallback(this);
+
+        classifier =
+                TensorFlowImageClassifier.create(
+                        getAssets(),
+                        "file:///android_asset/tf_model.pb",
+                        "file:///android_asset/labels.txt",
+                        INPUT_SIZE,
+                        IMAGE_MEAN,
+                        IMAGE_STD,
+                        INPUT_NAME,
+                        OUTPUT_NAME);
     }
 
     /** Zawołane, gdy inna czynność spróbje zbindować serwis */
