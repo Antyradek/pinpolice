@@ -1,11 +1,13 @@
 package pl.antyradek.pinpolice;
 
+import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
@@ -13,11 +15,17 @@ import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.opengl.GLES20;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.view.Gravity;
 import android.widget.Toast;
 import android.graphics.Matrix;
 import pl.antyradek.pinpolice.env.ImageUtils;
@@ -29,7 +37,7 @@ import java.io.Console;
 import java.io.IOException;
 
 /** Serwis działający w tle do odczytywania obrazów z kamery i interpretacji obrazu */
-public class CameraService extends Service implements Camera.PreviewCallback {
+public class CameraService extends Service implements Camera.PreviewCallback, LocationListener {
 
     /** Używany aparat */
     private Camera mainCamera;
@@ -71,6 +79,12 @@ public class CameraService extends Service implements Camera.PreviewCallback {
     private Runnable imageConverter;
 
     private static final Logger LOGGER = new Logger();
+
+    /** Ostatnia znana lokacja, tudzież null */
+    private Location lastLocation;
+
+    /** Gdy nie działa, nie wołaj żadnych systemowych metod */
+    private boolean isRunning;
 
     /** Stwarza cały serwis */
     @Override
@@ -167,6 +181,23 @@ public class CameraService extends Service implements Camera.PreviewCallback {
         if (rgbBytes == null) {
             rgbBytes = new int[previewWidth * previewHeight];
         }
+
+        //GPS
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        Criteria criteria = new Criteria();
+        String provider = locationManager.getBestProvider(criteria, false);
+        //lokalizacja powinna być zezwolona w MainActivity
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+            {
+                throw new RuntimeException("Brak pozwolenia na lokalizację");
+            }
+        }
+        LOGGER.i("Najlepszy dostawca lokalizacji: " + provider);
+
+        locationManager.requestLocationUpdates(provider, 400, 1, this);
+
+        this.isRunning = true;
     }
 
     /** Zawołane, gdy inna czynność spróbje zbindować serwis */
@@ -189,8 +220,11 @@ public class CameraService extends Service implements Camera.PreviewCallback {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        this.mainCamera.setPreviewCallback(null);
         this.mainCamera.stopPreview();
         this.mainCamera.release();
+        this.mainCamera = null;
+        this.isRunning = false;
     }
 
     /** Wołane na każdą ramkę kamery */
@@ -233,13 +267,61 @@ public class CameraService extends Service implements Camera.PreviewCallback {
         //GLES20.glReadPixels(); ?
 
         //zaktualizuj powiadomienie
-        this.notificationBuilder.setContentText("\"Jasność\": " + mean);
+        String contentText = new String();
+        //contentText += "\"Jasność\": " + mean;
+        contentText += "Pozycja: ";
+        if(this.lastLocation != null){
+             contentText += lastLocation.getLatitude() + " × " + lastLocation.getLongitude();
+        }
+        else
+        {
+            contentText += "Nieznana";
+        }
+        this.notificationBuilder.setContentText(contentText);
+
         //this.notificationBuilder.setLargeIcon(bitmap);
-        startForeground(FOREGROUND_SERVICE_ID, this.notificationBuilder.build());
+        if(this.isRunning)
+        {
+            //wyłącza aplikację
+            startForeground(FOREGROUND_SERVICE_ID, this.notificationBuilder.build());
+        }
     }
 
     protected int[] getRgbBytes() {
         imageConverter.run();
         return rgbBytes;
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        Toast toast = Toast.makeText(this, "Pozycja: " + location.toString(), Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.TOP | Gravity.LEFT, 0, 0);
+        toast.show();
+        this.lastLocation = location;
+        LOGGER.i("Zmieniona pozycja: " + location);
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+        Toast toast = Toast.makeText(this, "Status: " + status, Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.TOP | Gravity.LEFT, 0, 0);
+        toast.show();
+        LOGGER.i("Zmieniony stan: " + status);
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+        Toast toast = Toast.makeText(this, "Włączono dostawcę: " + provider, Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.TOP | Gravity.LEFT, 0, 0);
+        toast.show();
+        LOGGER.i("Włączony dostawcan: " + provider);
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+        Toast toast = Toast.makeText(this, "Wyłączono dostawcę: " + provider, Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.TOP | Gravity.LEFT, 0, 0);
+        toast.show();
+        LOGGER.i("Wyłączony dostawcan: " + provider);
     }
 }

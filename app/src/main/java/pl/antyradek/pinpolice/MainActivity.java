@@ -69,10 +69,10 @@ public class MainActivity extends AppCompatActivity {
         //poproś o pozwolenie na kamerę
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
         {
-            if(checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
+            if(checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
             {
                 //wywoła callback
-                requestPermissions(new String[]{Manifest.permission.CAMERA}, 12345);
+                requestPermissions(new String[]{Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION}, 12345);
             }
             else
             {
