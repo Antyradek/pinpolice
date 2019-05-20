@@ -32,6 +32,9 @@ import pl.antyradek.pinpolice.env.ImageUtils;
 import java.util.List;
 import android.graphics.Canvas;
 import pl.antyradek.pinpolice.env.Logger;
+import android.media.RingtoneManager;
+import android.media.Ringtone;
+import android.net.Uri;
 
 import java.io.Console;
 import java.io.IOException;
@@ -256,8 +259,18 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
 
         final List<Classifier.Recognition> results = classifier.recognizeImage(croppedBitmap);
 
-        LOGGER.i("Detect: %s", results);
-        Toast.makeText(this, "Detect:"+results, Toast.LENGTH_LONG).show();
+        for(Classifier.Recognition tr : results)
+            if(tr.getTitle().equals("radiowozy")) {
+                LOGGER.i("Detect: %s", tr);
+                Toast.makeText(this, "Detect:" + tr, Toast.LENGTH_LONG).show();
+                /*try {
+                    Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                    Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+                    r.play();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }*/
+            }
 
         //przerób na bitmapę
         //Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
