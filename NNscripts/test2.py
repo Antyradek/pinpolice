@@ -20,13 +20,13 @@ OBJECTIVE_FUNCTION = 'categorical_crossentropy'
 LOSS_METRICS = ['accuracy']
 
 # EARLY_STOP_PATIENCE must be < NUM_EPOCHS
-NUM_EPOCHS = 1
-EARLY_STOP_PATIENCE = 3
+NUM_EPOCHS = 100
+EARLY_STOP_PATIENCE = 5
 
 # These steps value should be proper FACTOR of no.-of-images in train & valid folders respectively
 # Training images processed in each step would be no.-of-train-images / STEPS_PER_EPOCH_TRAINING
-STEPS_PER_EPOCH_TRAINING = 1
-STEPS_PER_EPOCH_VALIDATION = 1
+STEPS_PER_EPOCH_TRAINING = 100
+STEPS_PER_EPOCH_VALIDATION = 100
 
 # These steps value should be proper FACTOR of no.-of-images in train & valid folders respectively
 # NOTE that these BATCH* are for Keras ImageDataGenerator batching to fill epoch step input
@@ -69,7 +69,7 @@ image_size = IMAGE_RESIZE
 # preprocessing_function is applied on each image but only after re-sizing & augmentation (resize => augment => pre-process)
 # Each of the keras.application.resnet* preprocess_input MOSTLY mean BATCH NORMALIZATION (applied on each batch) stabilize the inputs to nonlinear activation functions
 # Batch Normalization helps in faster convergence
-data_generator = ImageDataGenerator(preprocessing_function=preprocess_input)
+data_generator = ImageDataGenerator(preprocessing_function=preprocess_input,rescale=1./255,rotation_range=180,width_shift_range=50,height_shift_range=40,vertical_flip=True,zoom_range=5.0)
 
 # flow_From_directory generates batches of augmented data (where augmentation can be color conversion, etc)
 # Both train & valid folders must have NUM_CLASSES sub-folders
