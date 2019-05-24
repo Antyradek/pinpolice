@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
                     mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.camera_view, null));
                     imageView = findViewById(R.id.imageView);
                     imageView.setImageResource(R.drawable.ic_home_black_24dp);
+                    imageView.setY(100);
                     return true;
                 case R.id.navigation_map:
                     mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.map, null));
