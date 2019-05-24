@@ -59,6 +59,7 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
     private Bitmap rgbFrameBitmap = null;
     private Bitmap croppedBitmap = null;
     private Bitmap cropCopyBitmap = null;
+    private Bitmap rotatedBitmap = null;
     private Matrix frameToCropTransform;
     private Matrix cropToFrameTransform;
     protected int previewWidth = 0;
@@ -262,6 +263,9 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
         rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
         final Canvas canvas = new Canvas(croppedBitmap);
         canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
+        Matrix matrix = new Matrix();
+        matrix.postRotate(90);
+        rotatedBitmap = Bitmap.createBitmap(croppedBitmap, 0, 0, croppedBitmap.getWidth(), croppedBitmap.getHeight(), matrix, true);
 
         runOnUiThread(new Runnable() {
 
@@ -269,9 +273,6 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
             public void run() {
                 if(MainActivity.imageView != null)
                 {
-                    Matrix matrix = new Matrix();
-                    matrix.postRotate(90);
-                    Bitmap rotatedBitmap = Bitmap.createBitmap(croppedBitmap, 0, 0, croppedBitmap.getWidth(), croppedBitmap.getHeight(), matrix, true);
                     MainActivity.imageView.setImageBitmap(rotatedBitmap);
                 }
                 else
@@ -281,7 +282,7 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
 
         Thread t = new Thread(new Runnable() {
             public void run() {
-                final List<Classifier.Recognition> results = classifier.recognizeImage(croppedBitmap);
+                final List<Classifier.Recognition> results = classifier.recognizeImage(rotatedBitmap);
                 lastNNResult = null;
 
                 for(Classifier.Recognition tr : results) {
