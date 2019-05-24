@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
+import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.location.Criteria;
@@ -20,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Handler;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.widget.Toast;
 import android.graphics.Matrix;
@@ -306,7 +308,35 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
             t.start();
         }
         if(lastNNResult != null)
+        {
             Toast.makeText(this, "Detect:" + lastNNResult, Toast.LENGTH_LONG).show();
+            if(MainActivity.rozpoznanieTextView != null) {
+                float tmpConf=0.0f;
+                if(lastNNResult != null && lastNNResult.getConfidence() != null)
+                {
+                    try{
+                        tmpConf=lastNNResult.getConfidence()*100.0f;
+                    }
+                    catch(Exception e)
+                    {
+                        tmpConf=0;
+                        e.printStackTrace();
+                    }
+                }
+                MainActivity.rozpoznanieTextView.setText("Radiowóz na: " + tmpConf + "%");
+                MainActivity.rozpoznanieTextView.setTextColor(Color.RED);
+                MainActivity.rozpoznanieTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,25);
+            }
+        }
+        else
+        {
+            if(MainActivity.rozpoznanieTextView != null)
+            {
+                MainActivity.rozpoznanieTextView.setText("Nie rozpoznano...");
+                MainActivity.rozpoznanieTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,14);
+                MainActivity.rozpoznanieTextView.setTextColor(Color.WHITE);
+            }
+        }
 
         //przerób na bitmapę
         //Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);

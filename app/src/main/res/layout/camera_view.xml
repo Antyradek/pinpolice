@@ -28,5 +28,13 @@
         android:layout_height="347dp"
         app:srcCompat="@android:drawable/alert_dark_frame"
         tools:layout_editor_absoluteX="5dp"
-        tools:layout_editor_absoluteY="339dp" />
+        tools:layout_editor_absoluteY="109dp" />
+
+    <TextView
+        android:id="@+id/textView6"
+        android:layout_width="408dp"
+        android:layout_height="53dp"
+        android:text="Rozpoznanie:"
+        tools:layout_editor_absoluteX="2dp"
+        tools:layout_editor_absoluteY="512dp" />
 </android.support.constraint.ConstraintLayout>

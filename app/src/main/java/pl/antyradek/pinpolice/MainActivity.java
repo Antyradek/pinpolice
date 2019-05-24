@@ -23,6 +23,7 @@ import android.widget.Toast;
 public class MainActivity extends AppCompatActivity {
 
     public static ImageView imageView;
+    public static TextView rozpoznanieTextView;
 
     private ScrollView mainView;
     private LinearLayout mainLinearLayout;
@@ -44,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
                     imageView = findViewById(R.id.imageView);
                     imageView.setImageResource(R.drawable.ic_home_black_24dp);
                     imageView.setY(100);
+                    rozpoznanieTextView = findViewById(R.id.textView6);
+                    rozpoznanieTextView.setY(830);
                     return true;
                 case R.id.navigation_map:
                     mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.map, null));
