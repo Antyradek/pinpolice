@@ -5,6 +5,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -12,6 +13,7 @@ import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Display;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -46,7 +48,14 @@ public class MainActivity extends AppCompatActivity {
                     imageView.setImageResource(R.drawable.ic_home_black_24dp);
                     imageView.setY(100);
                     rozpoznanieTextView = findViewById(R.id.textView6);
-                    rozpoznanieTextView.setY(830);
+                    Display display = getWindowManager().getDefaultDisplay();
+                    Point size = new Point();
+                    display.getSize(size);
+                    int width = size.x;
+                    int height = size.y;
+                    float tY=height*0.45f;
+
+                    rozpoznanieTextView.setY(tY);
                     return true;
                 case R.id.navigation_map:
                     mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.map, null));

@@ -327,6 +327,8 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
                 MainActivity.rozpoznanieTextView.setTextColor(Color.RED);
                 MainActivity.rozpoznanieTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,25);
             }
+            else
+                LOGGER.i("MainActivity.imageView is null!");
         }
         else
         {
