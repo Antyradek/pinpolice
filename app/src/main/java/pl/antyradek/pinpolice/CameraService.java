@@ -10,21 +10,16 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.opengl.GLES20;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.app.NotificationCompat;
-import android.util.Log;
+import android.os.Handler;
 import android.view.Gravity;
 import android.widget.Toast;
 import android.graphics.Matrix;
@@ -36,7 +31,6 @@ import android.media.RingtoneManager;
 import android.media.Ringtone;
 import android.net.Uri;
 
-import java.io.Console;
 import java.io.IOException;
 
 /** Serwis działający w tle do odczytywania obrazów z kamery i interpretacji obrazu */
@@ -88,6 +82,11 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
 
     /** Gdy nie działa, nie wołaj żadnych systemowych metod */
     private boolean isRunning;
+
+    Handler handler;
+
+    private boolean isNNThreadRunning = false;
+    private Classifier.Recognition lastNNResult;
 
     /** Stwarza cały serwis */
     @Override
@@ -201,6 +200,11 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
         locationManager.requestLocationUpdates(provider, 400, 1, this);
 
         this.isRunning = true;
+        handler = new Handler();
+    }
+
+    private void runOnUiThread(Runnable runnable) {
+        handler.post(runnable);
     }
 
     /** Zawołane, gdy inna czynność spróbje zbindować serwis */
@@ -257,20 +261,47 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
         final Canvas canvas = new Canvas(croppedBitmap);
         canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
 
-        final List<Classifier.Recognition> results = classifier.recognizeImage(croppedBitmap);
+        runOnUiThread(new Runnable() {
 
-        for(Classifier.Recognition tr : results)
-            if(tr.getTitle().equals("radiowozy")) {
-                LOGGER.i("Detect: %s", tr);
-                Toast.makeText(this, "Detect:" + tr, Toast.LENGTH_LONG).show();
-                /*try {
-                    Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-                    Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
-                    r.play();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }*/
+            @Override
+            public void run() {
+                if(MainActivity.imageView != null)
+                    MainActivity.imageView.setImageBitmap(croppedBitmap);
+                else
+                    LOGGER.i("MainActivity.imageView is null!");
             }
+        });
+
+        Thread t = new Thread(new Runnable() {
+            public void run() {
+                final List<Classifier.Recognition> results = classifier.recognizeImage(croppedBitmap);
+                lastNNResult = null;
+
+                for(Classifier.Recognition tr : results) {
+                    //LOGGER.i("Detect: %s", tr);
+                    if (tr.getTitle().equals("radiowozy")) {
+                        LOGGER.i("Rozpoznano: %s", tr);
+                        lastNNResult = tr;
+                        try {
+                            Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                            Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+                            r.play();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                isNNThreadRunning = false;
+            }
+        });
+
+        if(!isNNThreadRunning)
+        {
+            isNNThreadRunning = true;
+            t.start();
+        }
+        if(lastNNResult != null)
+            Toast.makeText(this, "Detect:" + lastNNResult, Toast.LENGTH_LONG).show();
 
         //przerób na bitmapę
         //Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);

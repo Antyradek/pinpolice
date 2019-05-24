@@ -14,12 +14,15 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
+
+    public static ImageView imageView;
 
     private ScrollView mainView;
     private LinearLayout mainLinearLayout;
@@ -38,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
                     return true;
                 case R.id.navigation_camera_view:
                     mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.camera_view, null));
+                    imageView = findViewById(R.id.imageView);
+                    imageView.setImageResource(R.drawable.ic_home_black_24dp);
                     return true;
                 case R.id.navigation_map:
                     mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.map, null));
@@ -88,6 +93,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void startCameraService(){
+        if(imageView==null)
+            imageView = findViewById(R.id.imageView);
         //wystartuj serwis kamery
         Intent intent = new Intent(this, CameraService.class);
         this.startService(intent);

@@ -21,4 +21,12 @@
         android:text="• To chyba nie będzie działać z kamerą w innym wątku •"
         app:layout_constraintTop_toBottomOf="@+id/textView"
         tools:layout_editor_absoluteX="16dp" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="400dp"
+        android:layout_height="347dp"
+        app:srcCompat="@android:drawable/alert_dark_frame"
+        tools:layout_editor_absoluteX="5dp"
+        tools:layout_editor_absoluteY="339dp" />
 </android.support.constraint.ConstraintLayout>
