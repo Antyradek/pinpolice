@@ -266,7 +266,12 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
             @Override
             public void run() {
                 if(MainActivity.imageView != null)
-                    MainActivity.imageView.setImageBitmap(croppedBitmap);
+                {
+                    Matrix matrix = new Matrix();
+                    matrix.postRotate(90);
+                    Bitmap rotatedBitmap = Bitmap.createBitmap(croppedBitmap, 0, 0, croppedBitmap.getWidth(), croppedBitmap.getHeight(), matrix, true);
+                    MainActivity.imageView.setImageBitmap(rotatedBitmap);
+                }
                 else
                     LOGGER.i("MainActivity.imageView is null!");
             }
