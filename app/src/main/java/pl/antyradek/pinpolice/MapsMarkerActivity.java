@@ -61,10 +61,12 @@ public class MapsMarkerActivity extends AppCompatActivity
         LOGGER.i("onMapReady");
         // Add a marker in Sydney, Australia,
         // and move the map's camera to the same location.
-        LatLng sydney = new LatLng(-33.852, 151.211);
-        googleMap.addMarker(new MarkerOptions().position(sydney)
-                .title("Marker in Sydney"));
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+
+        LatLng actLoc = new LatLng(CameraService.lastLocation.getLatitude(), CameraService.lastLocation.getLongitude());
+        googleMap.addMarker(new MarkerOptions().position(actLoc)
+                .title("Moja lokalizacja"));
+        googleMap.moveCamera(CameraUpdateFactory.newLatLng(actLoc));
+        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(actLoc, 17.0f));
         LOGGER.i("MapType: "+googleMap.getMapType());
     }
 

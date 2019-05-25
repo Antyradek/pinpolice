@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
                     czasKlasyfikacjiTextView.setY(110);
                     return true;
                 case R.id.navigation_map:
-                    //mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.map, null));
+                    mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.map, null));
                     startMapActivity();
                     return true;
 

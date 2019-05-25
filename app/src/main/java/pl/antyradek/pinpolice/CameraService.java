@@ -81,7 +81,7 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
     private static final Logger LOGGER = new Logger();
 
     /** Ostatnia znana lokacja, tudzież null */
-    private Location lastLocation;
+    public static Location lastLocation;
 
     /** Gdy nie działa, nie wołaj żadnych systemowych metod */
     private boolean isRunning;
