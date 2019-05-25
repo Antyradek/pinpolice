@@ -16,9 +16,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Display;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,22 +45,20 @@ public class MainActivity extends AppCompatActivity {
             switch (item.getItemId()) {
                 case R.id.navigation_dashboard:
                     mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.dashboard, null));
+                    Button button = (Button)findViewById(R.id.setButton);
+                    button.setOnClickListener(new View.OnClickListener()
+                    {
+                        public void onClick(View view)
+                        {
+                            setAddress(view);
+                        }
+                    });
                     return true;
                 case R.id.navigation_camera_view:
                     mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.camera_view, null));
                     imageView = findViewById(R.id.imageView);
-                    imageView.setImageResource(R.drawable.ic_home_black_24dp);
-                    imageView.setY(100);
                     rozpoznanieTextView = findViewById(R.id.textView6);
-                    Display display = getWindowManager().getDefaultDisplay();
-                    Point size = new Point();
-                    display.getSize(size);
-                    int width = size.x;
-                    int height = size.y;
-                    float tY=height*0.45f;
-                    rozpoznanieTextView.setY(tY);
                     czasKlasyfikacjiTextView = findViewById(R.id.textView7);
-                    czasKlasyfikacjiTextView.setY(110);
                     return true;
                 case R.id.navigation_map:
                     mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.map, null));
@@ -74,20 +75,19 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //ustaw słuchanie przełączeń elementów menu
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
-        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-
         //znajdź elementy GUI
         mainView = (ScrollView) findViewById(R.id.main_view);
         mainLinearLayout = (LinearLayout) findViewById(R.id.main_linear_layout);
 
-        //ustaw temat (jakiś bug i nie robi tego automatycznie)
+        //ustaw skórkę (jakiś bug i nie robi tego automatycznie)
         getApplicationContext().setTheme(R.style.AppTheme);
-        //ustaw pierwszy widok na start
-        mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.dashboard, null));
 
-        //poproś o pozwolenie na kamerę
+        //ustaw słuchanie przełączeń elementów menu
+        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+        navigation.setSelectedItemId(R.id.navigation_dashboard);
+
+        //poproś o pozwolenie na aparat i pozycję
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
         {
             if(checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
@@ -111,8 +111,19 @@ public class MainActivity extends AppCompatActivity {
     void startCameraService(){
         if(imageView==null)
             imageView = findViewById(R.id.imageView);
-        //wystartuj serwis kamery
+
+        //zatrzymaj poprzedni
+        //stopService(new Intent(this, CameraService.class));
+
+        //wystartuj serwis aparatu i pozycji
+        String address = ((EditText)findViewById(R.id.addressText)).getText().toString();
+        int port = Integer.parseInt(((EditText)findViewById(R.id.portText)).getText().toString());
+
+        float confidence = ((SeekBar)findViewById(R.id.confidenceBar)).getProgress() / 100.0f;
         Intent intent = new Intent(this, CameraService.class);
+        intent.putExtra("address", address);
+        intent.putExtra("port", port);
+        intent.putExtra("confidence", confidence);
         this.startService(intent);
     }
 
@@ -134,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
         else
         {
             //powiedz, że to niefajne
-            Toast.makeText(this, R.string.camera_request_description, Toast.LENGTH_LONG);
+            Toast.makeText(this, R.string.camera_request_description, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -142,5 +153,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         this.stopService(new Intent(this, CameraService.class));
+    }
+
+    /** Callback guzika do ustawiania adresu */
+    public void setAddress(View view)
+    {
+        //wysyła intent
+       startCameraService();
     }
 }

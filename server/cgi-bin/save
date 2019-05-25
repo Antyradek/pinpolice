@@ -1,0 +1,23 @@
+#! /bin/sh
+# Zapisuje nową lokalizację
+# Argumenty: xxx?dd.ddd&dd.ddd
+# Dwie liczby zmiennoprzecinkowe, szerokość i długość geograficzna
+
+echo "Content-type: text"
+echo
+
+ARGS=$(echo "$QUERY_STRING" | tr "&" " ")
+ARGSARR=($ARGS)
+LAT="${ARGSARR[0]}"
+LONG="${ARGSARR[1]}"
+
+echo "Szerokość: $LAT"
+echo "Długość: $LONG"
+
+if [[ -z $LONG ]] || [[ -z $LAT ]]
+then
+	echo "Błąd argumentów"
+	exit 1
+fi
+
+echo "$LAT $LONG" >> records

@@ -9,7 +9,16 @@
     <string name="title_map">Mapa</string>
 
     <string name="dashboard_instruction_title">Instrukcja</string>
-    <string name="dashboard_instruction">Aplikacja służy do zaliczenia przedmiotu WPAM</string>
+    <string name="dashboard_instruction">Aplikacja służy do zaliczenia przedmiotu WPAM.</string>
 
     <string name="dashboard_settings_title">Ustawienia aplikacji</string>
+    <string name="dashboard_address_title">Adres serwera</string>
+    <string name="dashboard_settings_field_address">192.168.0.1</string>
+    <string name="dashboard_settings_field_address_hint">Adres serwera</string>
+    <string name="dashboard_settings_field_port_hint">Port</string>
+    <string name="dashboard_settings_field_port">4343</string>
+    <string name="dashboard_settings_button_set">Ustaw</string>
+    <string name="dashboard_confidence_title">Minimalna pewność wyników</string>
+
+    <string name="google_maps_key">XXXX</string>
 </resources>

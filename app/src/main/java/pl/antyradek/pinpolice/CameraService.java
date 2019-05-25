@@ -21,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Handler;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.widget.Toast;
@@ -32,6 +33,14 @@ import pl.antyradek.pinpolice.env.Logger;
 import android.media.RingtoneManager;
 import android.media.Ringtone;
 import android.net.Uri;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+
 
 import java.io.IOException;
 
@@ -91,6 +100,12 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
     private boolean isNNThreadRunning = false;
     private Classifier.Recognition lastNNResult;
     long time;
+    /** Klient do połączeń sieciowych **/
+    private HttpClient httpClient = new DefaultHttpClient();
+
+    private String sendAddress = "localhost";
+    private int sendPort = 4343;
+    private float minimalConfidence = 0.05f;
 
     /** Stwarza cały serwis */
     @Override
@@ -220,10 +235,19 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Toast.makeText(this, "Kamera uruchomiona", Toast.LENGTH_SHORT).show();
-        Toast.makeText(this, "Wielkość aparatu: " + mainCamera.getParameters().getPreviewSize().width + "×" + mainCamera.getParameters().getPreviewSize().height, Toast.LENGTH_LONG).show();
+        LOGGER.i("Wielkość aparatu: " + mainCamera.getParameters().getPreviewSize().width + "×" + mainCamera.getParameters().getPreviewSize().height);
 
         //uruchom aparat
         this.mainCamera.startPreview();
+
+        //wyciągnij z intenta dane
+        this.sendAddress = intent.getExtras().getString("address");
+        this.sendPort = intent.getExtras().getInt("port");
+        this.minimalConfidence = intent.getExtras().getFloat("confidence");
+
+        LOGGER.d("Ustawiony adres: %s", this.sendAddress);
+        LOGGER.d("Ustawiony port: %d", this.sendPort);
+        LOGGER.d("Ustawiona dokładność: %f", this.minimalConfidence);
 
         return Service.START_STICKY;
     }
@@ -238,7 +262,52 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
         this.isRunning = false;
     }
 
-    /** Wołane na każdą ramkę kamery */
+    /** Wyślij aktualną pozycję (jeśli jest) do serwera */
+    private void sendLocation()
+    {
+        if(this.lastLocation == null)
+        {
+            return;
+        }
+        try
+        {
+
+            String latitude = String.valueOf(this.lastLocation.getLatitude());
+            String longitude = String.valueOf(this.lastLocation.getLongitude());
+            HttpGet httpGet = new HttpGet("http://" + this.sendAddress + ":" + this.sendPort + "/cgi-bin/save?" + latitude + "&" + longitude);
+            LOGGER.i("Wysyłanie lokacji do: " + httpGet.getURI());
+            HttpResponse response = httpClient.execute(httpGet);
+
+            // writing response to log
+            LOGGER.i("Odpowiedź serwera: ", response.toString());
+
+        }
+        catch (ClientProtocolException e)
+        {
+            // writing exception to log
+            LOGGER.e(e.toString());
+
+        }
+        catch (IOException e)
+        {
+            // writing exception to log
+            LOGGER.e(e.toString());
+        }
+    }
+
+    /** Zadzwoń powiadomieniem */
+    private void ringADingDong()
+    {
+        try {
+            Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+            r.play();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /** Wołane na każdą ramkę aparatu */
     @Override
     public void onPreviewFrame(final byte[] data, Camera camera) {
         //NOTE data to jakiś YUV obiekt, nie da się bezpośrednio RGB wyciągnąć
@@ -291,13 +360,12 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
                     //LOGGER.i("Detect: %s", tr);
                     if (tr.getTitle().equals("radiowozy")) {
                         LOGGER.i("Rozpoznano: %s", tr);
-                        lastNNResult = tr;
-                        try {
-                            Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-                            Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
-                            r.play();
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                        if(tr.getConfidence() > minimalConfidence) {
+                            lastNNResult = tr;
+                            //zadzwoń powiadomieniem
+                            ringADingDong();
+                            //wyślij tę informację w sieć
+                            sendLocation();
                         }
                     }
                 }

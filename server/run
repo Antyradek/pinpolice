@@ -1,0 +1,4 @@
+#! /bin/sh
+# Uruchom serwer
+
+python -m http.server --cgi 4343
