@@ -26,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
 
     public static ImageView imageView;
     public static TextView rozpoznanieTextView;
+    public static TextView czasKlasyfikacjiTextView;
 
     private ScrollView mainView;
     private LinearLayout mainLinearLayout;
@@ -54,8 +55,9 @@ public class MainActivity extends AppCompatActivity {
                     int width = size.x;
                     int height = size.y;
                     float tY=height*0.45f;
-
                     rozpoznanieTextView.setY(tY);
+                    czasKlasyfikacjiTextView = findViewById(R.id.textView7);
+                    czasKlasyfikacjiTextView.setY(110);
                     return true;
                 case R.id.navigation_map:
                     mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.map, null));

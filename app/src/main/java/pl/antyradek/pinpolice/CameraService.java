@@ -90,6 +90,7 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
 
     private boolean isNNThreadRunning = false;
     private Classifier.Recognition lastNNResult;
+    long time;
 
     /** Stwarza cały serwis */
     @Override
@@ -282,6 +283,7 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
 
         Thread t = new Thread(new Runnable() {
             public void run() {
+                long init = System.currentTimeMillis();
                 final List<Classifier.Recognition> results = classifier.recognizeImage(rotatedBitmap);
                 lastNNResult = null;
 
@@ -299,12 +301,16 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
                         }
                     }
                 }
+                long now = System.currentTimeMillis();
+                time=now-init;
                 isNNThreadRunning = false;
             }
         });
 
         if(!isNNThreadRunning)
         {
+            if(MainActivity.czasKlasyfikacjiTextView != null)
+                MainActivity.czasKlasyfikacjiTextView.setText("Czas klasyfikacji: "+time+" ms");
             isNNThreadRunning = true;
             t.start();
         }

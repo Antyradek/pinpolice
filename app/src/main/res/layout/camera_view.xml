@@ -37,4 +37,12 @@
         android:text="Rozpoznanie:"
         tools:layout_editor_absoluteX="2dp"
         tools:layout_editor_absoluteY="512dp" />
+
+    <TextView
+        android:id="@+id/textView7"
+        android:layout_width="376dp"
+        android:layout_height="28dp"
+        android:text="TextView"
+        tools:layout_editor_absoluteX="16dp"
+        tools:layout_editor_absoluteY="109dp" />
 </android.support.constraint.ConstraintLayout>
