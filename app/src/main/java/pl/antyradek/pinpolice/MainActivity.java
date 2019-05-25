@@ -60,7 +60,8 @@ public class MainActivity extends AppCompatActivity {
                     czasKlasyfikacjiTextView.setY(110);
                     return true;
                 case R.id.navigation_map:
-                    mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.map, null));
+                    //mainLinearLayout.addView(View.inflate(getApplicationContext(), R.layout.map, null));
+                    startMapActivity();
                     return true;
 
             }
@@ -113,6 +114,11 @@ public class MainActivity extends AppCompatActivity {
         //wystartuj serwis kamery
         Intent intent = new Intent(this, CameraService.class);
         this.startService(intent);
+    }
+
+    public void startMapActivity() {
+        Intent intent = new Intent(this, MapsMarkerActivity.class);
+        startActivity(intent);
     }
 
     /** Wywołane na zezwolenie na kamerę */
