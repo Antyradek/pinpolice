@@ -49,7 +49,7 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
     final int FOREGROUND_SERVICE_ID = 12345;
 
     /** Budowacz powiadomienia do aktualizacji tegoż */
-    Notification.Builder notificationBuilder;
+    public static Notification.Builder notificationBuilder;
 
     /** Pamięć kamery */
     SurfaceTexture surfaceTexture;

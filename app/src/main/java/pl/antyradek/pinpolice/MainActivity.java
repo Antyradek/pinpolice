@@ -22,6 +22,8 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import pl.antyradek.pinpolice.env.Logger;
+
 public class MainActivity extends AppCompatActivity {
 
     public static ImageView imageView;
@@ -30,6 +32,11 @@ public class MainActivity extends AppCompatActivity {
 
     private ScrollView mainView;
     private LinearLayout mainLinearLayout;
+
+    private static final Logger LOGGER = new Logger();
+
+    public static Thread.UncaughtExceptionHandler defaultHandler = null;
+    public static Thread.UncaughtExceptionHandler exceptionHandler = null;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -72,6 +79,27 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if(defaultHandler == null){
+            defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
+        }
+        if(exceptionHandler == null){
+            exceptionHandler = new Thread.UncaughtExceptionHandler() {
+                @Override
+                public void uncaughtException(Thread paramThread, Throwable paramThrowable) {
+                    Toast.makeText(MainActivity.this, paramThrowable.getMessage(), Toast.LENGTH_LONG);
+                    LOGGER.e("Uncaught Exception", paramThrowable.getMessage());
+                    paramThrowable.printStackTrace();
+                    CameraService.notificationBuilder.setContentTitle("Uncaught Exception"+paramThrowable.getMessage())
+                            .setContentText("Uncaught Exception"+paramThrowable.getMessage())
+                            .setSmallIcon(R.drawable.ic_camera_black_24dp);
+                    defaultHandler.uncaughtException(paramThread, paramThrowable);
+                }
+            };
+
+            Thread.setDefaultUncaughtExceptionHandler(exceptionHandler);
+        }
+
         setContentView(R.layout.activity_main);
 
         //ustaw słuchanie przełączeń elementów menu
