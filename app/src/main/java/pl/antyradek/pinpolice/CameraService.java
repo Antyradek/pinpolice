@@ -28,6 +28,8 @@ import android.view.Gravity;
 import android.widget.Toast;
 import android.graphics.Matrix;
 import pl.antyradek.pinpolice.env.ImageUtils;
+
+import java.util.ArrayList;
 import java.util.List;
 import android.graphics.Canvas;
 import pl.antyradek.pinpolice.env.Logger;
@@ -111,6 +113,8 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
     private boolean isNetworkReportingThreadRunning = false;
     private boolean isSoundReportingThreadRunning = false;
     private boolean isGetLocationsThreadRunning = false;
+
+    public static ArrayList<Location> locationsList=null;
 
     /** Stwarza cały serwis */
     @Override
@@ -307,8 +311,26 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
             LOGGER.i("Pobieranie lokacji z: " + httpGet.getURI());
             HttpResponse response = httpClient.execute(httpGet);
 
+            String resp=response.toString();
             // writing response to log
-            LOGGER.i("Odpowiedź serwera (lokalizacje): ", response.toString());
+            LOGGER.i("Odpowiedź serwera (lokalizacje): ", resp);
+
+
+            if(locationsList==null)
+            {
+                locationsList=new ArrayList<Location>();
+            }
+            locationsList.clear();
+            String lines[] = resp.split("\\r?\\n");
+            for(String line : lines){
+                String[] splited = line.split(" ");
+                if(splited.length==2) {
+                    Location loc = new Location("");
+                    loc.setLatitude(Double.valueOf(splited[0]));
+                    loc.setLongitude(Double.valueOf(splited[1]));
+                    locationsList.add(loc);
+                }
+            }
 
         }
         catch (ClientProtocolException e)
