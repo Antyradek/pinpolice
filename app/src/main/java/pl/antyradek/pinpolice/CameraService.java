@@ -116,6 +116,8 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
 
     public static ArrayList<Location> locationsList=null;
 
+    private double maxDistance=3000.0;
+
     /** Stwarza cały serwis */
     @Override
     public void onCreate() {
@@ -328,8 +330,15 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
                     Location loc = new Location("");
                     loc.setLatitude(Double.valueOf(splited[0]));
                     loc.setLongitude(Double.valueOf(splited[1]));
-                    locationsList.add(loc);
+                    if(loc.distanceTo(lastLocation)<maxDistance) {
+                        locationsList.add(loc);
+                        LOGGER.i("Radiowóz w pobliżu: "+loc);
+                    }
                 }
+            }
+            if(locationsList!=null && locationsList.size()>0){
+                Toast.makeText(this,"Zgłoszono radiowóz w pobliżu: "+locationsList.size(),Toast.LENGTH_LONG).show();
+                ringADingDong();
             }
 
         }

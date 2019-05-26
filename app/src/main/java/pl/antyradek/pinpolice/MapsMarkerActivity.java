@@ -1,5 +1,6 @@
 package pl.antyradek.pinpolice;
 
+import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
@@ -14,6 +15,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import android.view.View;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+
+import java.util.ArrayList;
 
 import pl.antyradek.pinpolice.env.Logger;
 
@@ -63,8 +66,25 @@ public class MapsMarkerActivity extends AppCompatActivity
         // and move the map's camera to the same location.
 
         LatLng actLoc = new LatLng(CameraService.lastLocation.getLatitude(), CameraService.lastLocation.getLongitude());
-        googleMap.addMarker(new MarkerOptions().position(actLoc)
-                .title("Moja lokalizacja"));
+        /*googleMap.addMarker(new MarkerOptions().position(actLoc)
+                .title("Moja lokalizacja"));*/
+        try{
+            if(CameraService.locationsList!=null){
+                ArrayList<Location> tmpLocList=new ArrayList<>(CameraService.locationsList);
+                if(tmpLocList!=null){
+                    int i=0;
+                    for(Location loc : tmpLocList){
+                        i++;
+                        LatLng tmpLatLang = new LatLng(loc.getLatitude(), loc.getLongitude());
+                        googleMap.addMarker(new MarkerOptions().position(tmpLatLang)
+                                .title("Zgłoszenie radiowozu "+i));
+                    }
+                }
+            }
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(actLoc));
         googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(actLoc, 17.0f));
         LOGGER.i("MapType: "+googleMap.getMapType());
