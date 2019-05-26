@@ -110,6 +110,7 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
 
     private boolean isNetworkReportingThreadRunning = false;
     private boolean isSoundReportingThreadRunning = false;
+    private boolean isGetLocationsThreadRunning = false;
 
     /** Stwarza cały serwis */
     @Override
@@ -299,6 +300,30 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
         }
     }
 
+    private void getLocations(){
+        try
+        {
+            HttpGet httpGet = new HttpGet("http://" + this.sendAddress + ":" + this.sendPort + "/cgi-bin/read");
+            LOGGER.i("Pobieranie lokacji z: " + httpGet.getURI());
+            HttpResponse response = httpClient.execute(httpGet);
+
+            // writing response to log
+            LOGGER.i("Odpowiedź serwera (lokalizacje): ", response.toString());
+
+        }
+        catch (ClientProtocolException e)
+        {
+            // writing exception to log
+            LOGGER.e(e.toString());
+
+        }
+        catch (IOException e)
+        {
+            // writing exception to log
+            LOGGER.e(e.toString());
+        }
+    }
+
     /** Zadzwoń powiadomieniem */
     private void ringADingDong()
     {
@@ -307,6 +332,7 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
             Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
             r.play();
             SystemClock.sleep(2000);//maksymalna częstość spamowania dzwiękiem
+            r.stop();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -443,6 +469,19 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
                 MainActivity.rozpoznanieTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,14);
                 MainActivity.rozpoznanieTextView.setTextColor(Color.WHITE);
             }
+        }
+
+        Thread getLocationsThread=new Thread(new Runnable() {
+            @Override
+            public void run() {
+                getLocations();
+                isGetLocationsThreadRunning=false;
+            }
+        });
+        if(!isGetLocationsThreadRunning)
+        {
+            isGetLocationsThreadRunning=true;
+            getLocationsThread.start();
         }
 
         //przerób na bitmapę
