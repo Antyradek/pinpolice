@@ -21,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -106,6 +107,9 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
     private String sendAddress = "localhost";
     private int sendPort = 4343;
     private float minimalConfidence = 0.05f;
+
+    private boolean isNetworkReportingThreadRunning = false;
+    private boolean isSoundReportingThreadRunning = false;
 
     /** Stwarza cały serwis */
     @Override
@@ -302,6 +306,7 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
             Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
             Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
             r.play();
+            SystemClock.sleep(2000);//maksymalna częstość spamowania dzwiękiem
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -362,10 +367,6 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
                         LOGGER.i("Rozpoznano: %s", tr);
                         if(tr.getConfidence() > minimalConfidence) {
                             lastNNResult = tr;
-                            //zadzwoń powiadomieniem
-                            ringADingDong();
-                            //wyślij tę informację w sieć
-                            sendLocation();
                         }
                     }
                 }
@@ -384,20 +385,49 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
         }
         if(lastNNResult != null)
         {
-            Toast.makeText(this, "Detect:" + lastNNResult, Toast.LENGTH_LONG).show();
-            if(MainActivity.rozpoznanieTextView != null) {
-                float tmpConf=0.0f;
-                if(lastNNResult != null && lastNNResult.getConfidence() != null)
+            float tmpConf=0.0f;
+            //z powodu na wykozystanie zmiennych globalnych do synchronizacji między wątkami jest tyci ryzyko, że poleci nullpointerexception albo coś
+            try{
+                if(lastNNResult != null && lastNNResult.getConfidence() != null) //
                 {
-                    try{
-                        tmpConf=lastNNResult.getConfidence()*100.0f;
-                    }
-                    catch(Exception e)
-                    {
-                        tmpConf=0;
-                        e.printStackTrace();
-                    }
+                    Toast.makeText(this, "Detect:" + lastNNResult, Toast.LENGTH_LONG).show();
+                    tmpConf=lastNNResult.getConfidence()*100.0f;
                 }
+            }
+            catch(Exception e)
+            {
+                tmpConf=0;
+                e.printStackTrace();
+            }
+            //wysyłanie do sieci w wątku rozpoznawania powoduje okrpone zatrzymanie rozpoznawania i uzytkownik moze nie wiedzieć co si dzieje
+            Thread networkReportingThread=new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    //wyślij tę informację w sieć
+                    sendLocation();
+                    isNetworkReportingThreadRunning=false;
+                }
+            });
+            if(!isNetworkReportingThreadRunning)
+            {
+                isNetworkReportingThreadRunning=true;
+                networkReportingThread.start();
+            }
+            //dziwięk też może trochę trwać, ale w wątku sieciowym  jest nie dobrze, bo się na zbyt długo zawiesza
+            Thread soundReportingThread=new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    //zadzwoń powiadomieniem
+                    ringADingDong();
+                    isSoundReportingThreadRunning=false;
+                }
+            });
+            if(!isSoundReportingThreadRunning)
+            {
+                isSoundReportingThreadRunning=true;
+                soundReportingThread.start();
+            }
+            if(MainActivity.rozpoznanieTextView != null) {
                 MainActivity.rozpoznanieTextView.setText("Radiowóz na: " + tmpConf + "%");
                 MainActivity.rozpoznanieTextView.setTextColor(Color.RED);
                 MainActivity.rozpoznanieTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,25);
