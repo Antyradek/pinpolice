@@ -43,6 +43,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 
 
 import java.io.IOException;
@@ -313,7 +314,7 @@ public class CameraService extends Service implements Camera.PreviewCallback, Lo
             LOGGER.i("Pobieranie lokacji z: " + httpGet.getURI());
             HttpResponse response = httpClient.execute(httpGet);
 
-            String resp=response.toString();
+            String resp = EntityUtils.toString(response.getEntity());
             // writing response to log
             LOGGER.i("Odpowiedź serwera (lokalizacje): ", resp);
 

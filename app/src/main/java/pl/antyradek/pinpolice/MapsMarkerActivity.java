@@ -10,6 +10,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import android.view.View;
@@ -66,8 +67,8 @@ public class MapsMarkerActivity extends AppCompatActivity
         // and move the map's camera to the same location.
 
         LatLng actLoc = new LatLng(CameraService.lastLocation.getLatitude(), CameraService.lastLocation.getLongitude());
-        /*googleMap.addMarker(new MarkerOptions().position(actLoc)
-                .title("Moja lokalizacja"));*/
+        googleMap.addMarker(new MarkerOptions().position(actLoc).rotation(180f)
+                .title("Jesteś tutaj"));
         try{
             if(CameraService.locationsList!=null){
                 ArrayList<Location> tmpLocList=new ArrayList<>(CameraService.locationsList);
@@ -77,7 +78,7 @@ public class MapsMarkerActivity extends AppCompatActivity
                         i++;
                         LatLng tmpLatLang = new LatLng(loc.getLatitude(), loc.getLongitude());
                         googleMap.addMarker(new MarkerOptions().position(tmpLatLang)
-                                .title("Zgłoszenie radiowozu "+i));
+                                .title("Radiowóz "+i));
                     }
                 }
             }

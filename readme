@@ -8,16 +8,35 @@
 To projekt Android Studio (co za śmietnik w repozytorium).
 Jak ogarniemy, to sprzątniemy.
 
+———————————————
 Kompatybilność:
+———————————————
 Powinien działać na KitKacie.
-Testowany na Oreo.
+Testowany na urządzeniu Oreo bez Usług Google oraz emulatorze Pie.
 
-Co działa:
+———————————
+Kompilacja:
+———————————
+Repozytorium zawiera pliki używane przez Android Studio.
+Projekt powinien móc się otworzyć i skompilować w tym IDE.
+
+Do pracy potrzebne są definicje sieci neuronowych, plik tf_model.pb, który należy umieścić w app/src/main/assets/.
+Niestety, jest zbyt duży, aby trzymać go w repozytorium.
+
+———————————
+Jak działa:
+———————————
 Jak się uruchomi aplikację, to uruchamia serwis w tle i wciska powiadomienie na pasek.
+W tle aparat wykrywa radiowozy i powiadamia głosowo, gdy jakiś wykryje.
+Wysyła aktualną lokalizację urządzenia na serwer.
+Równolegle co jakiś czas pobiera z serwera listę lokalizacji, zgłoszonych przez innych.
 
-Co dalej zrobić:
-• Podgląd kamery i przerobienie na dane RGB.
-• Pstryczek aktywacji na głównym ekranie.
-• Podgląd kamery na osobnym ekranie (jeśli w miarę łatwe).
-• ...potem jakieś rzeczy z lokalizacją.
-• ...potem coś z mapą.
+• Ekran konfiguracji pozwala ustawić podstawowe parametry.
+• Podgląd na żywo pozwala przetestować wykrywanie z aparatu.
+• Mapa pozwala na podgląd aktualnej pozycji telefonu i pobliskich radiowozów.
+
+———————
+Serwer:
+———————
+W katalogu server znajduje się backend. Do uruchomienia potrzebny jest Python 3 i powłoka.
+Wystawia on dwa programy w cgi-bin do zapisu i odczytu przysłanych rekordów.
